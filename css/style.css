@@ -1,0 +1,90 @@
+/* 
+    Document   : style
+    Created on : 25-abr-2013, 0:35:17
+    Author     : german
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+body{
+    font-family: Arial;
+}
+
+root { 
+    display: block;
+}
+.bodyComisiones{
+    background-color: green;
+}
+/* Estilos Tabla */
+
+.tabla {
+    text-align: center;
+    width: 850px;
+	border-radius:5px;
+	border:1px;
+    /*border-color:#3E57A8;
+	border-style:solid;*/
+     
+}
+.tablaCliente {
+    text-align: center;
+	width: 1100px;
+	border-radius:5px;
+	border:1px;
+    /*border-color:#3E57A8;
+	border-style:solid;*/
+     
+}
+
+
+
+.paginador {
+text-align:center;
+
+}
+.headerTabla, .footerTabla{
+background-color:#B9C9FE;
+}
+
+.headerTablaCompras, .footerTablaCompras{
+background-color:#76DEAF;
+}
+.headerTabla{
+min-height:30px;
+}
+.colAncha {
+width:250px;
+}
+.odd{
+	background-color:#FFFFFF;
+}
+.oddCompras{
+	background-color:#FFFFFF;
+}
+.even{
+	background-color:#E8EDFF;
+}
+.evenCompras{
+	background-color:#CAFAE5;
+}
+.odd:hover, .even:hover {
+background-color:#FFF6BF;
+}
+.oddCompras:hover, .evenCompras:hover {
+background-color:#FFF6BF;
+}
+.colAngosta {
+width:90px;
+height: 30px;
+}
+/* Fin tabla */
+.hidden {
+    display: none;
+    
+}
+.active {
+   pointer-events: none;
+   cursor: default;
+}
+.botonNegro{background:#336699;padding-leftwards:35px 0;border:0px solid #333;color:#fff;cursor:pointer;font-weight:bold;text-align:center; padding-top: 5px;padding-bottom:5px; border-radius:5px}

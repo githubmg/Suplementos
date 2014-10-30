@@ -1,0 +1,323 @@
+<?php
+	
+    class ClienteView {
+        public static function getComboClientesHTML(){
+
+        $listaClientes = DB::getIdsCliente(NULL);
+        $html ='
+                <div class="ui-widget">
+                    <select id="comboboxcli" name="comboClientes">
+                        <option value="">Seleccione...</option>';
+
+        $cantArgs= func_num_args();
+        if ($cantArgs==1) {
+            foreach( $listaClientes as $mi_cliente ){
+                $c = new Cliente($mi_cliente['id_cliente']);
+                if (func_get_arg(0)==$c->getId()) {
+                    $html.='<option selected="selected" value="'.$c->getId().'">'.$c->getPersona()->getNombre().'</option>';
+                } else {
+                    $html.='<option value="'.$c->getId().'">'.$c->getPersona()->getNombre().'</option>';
+                }
+            }
+        } else {
+            foreach( $listaClientes as $mi_cliente ){
+                $c = new Cliente(intval($mi_cliente['id_cliente']));
+                $html.='<option value="'.$c->getId().'">'.$c->getPersona()->getNombre().'</option>';
+            }
+        }
+
+        $html.='    </select>
+                </div>';
+        return $html;
+
+        }
+        
+        public static function getListadoHTML( $todosDePagina, $indicePag, $cantidadDePaginas){
+            $html = "<table id='clientes' class='tablaCliente'>";
+            $html .= ClienteView::getTitulos();
+            $i=0;
+            foreach( $todosDePagina as $cliente ){
+
+                $i++;
+                $p = new Cliente($cliente['id_cliente']);
+                $html .= ClienteView::getHTML( $p ,$i);
+
+            } 
+            $html .= PageView::getTableFooter($indicePag,$cantidadDePaginas,13,'cliente','clientes.php?',null);
+            $html .="</table>";
+
+            return $html;
+        }
+
+        public static function getTitulos(){
+            //T&iacute;tulos de la clase
+            $html = "
+            <thead class='headerTabla'>
+                <tr>
+                    <th scope='col' class='colAncha' > Cliente </th>
+                    <th scope='col' class='hidden'> Id_Cliente </th>
+					<th scope='col'> Subempresa </th>
+                    <th scope='col' > Provincia </th>
+                    <th scope='col' > Localidad </th>
+                    <th scope='col' > Calle </th>
+                    <th scope='col' > N&uacute;mero</th>
+                    <th scope='col' > Piso</th>
+                    <th scope='col' > C&oacute;digo Postal</th>
+                    <th scope='col' > Telefono</th>
+                    <th scope='col'> Email </th>
+                    <th scope='col' > Observaciones</th>
+                    <th scope='col' > Acciones </th>
+                </tr>
+            </thead>
+            ";
+            return $html;
+        }
+
+      
+
+        public static function traerClase($numeroFila ){
+            if ($numeroFila % 2 == 0) {
+                    return 'odd';
+                    } else {
+                    return 'even';
+                    }
+        }
+
+        public static function getHTML( Cliente $c,$numeroFila ){
+            //primero mapeo los valores
+            
+            $persona = $c->getPersona();
+            $subempresa = $c->getSubempresa();
+            $cliente = StringController::sanitizarParaHTML($persona-> getNombre());
+            $id_cliente = $c->getId();
+            $domicilio =  $persona->getDomicilio();
+            if ($domicilio->getLocalidad()->getId() ){
+                echo "Entré";
+               $provincia = StringController::sanitizarParaHTML($domicilio->getLocalidad()->getProvincia()->getDescripcion());
+               $localidad = StringController::sanitizarParaHTML($domicilio->getLocalidad()->getDescripcion());
+            } else {
+                $provincia = "";
+                $localidad = "";                
+            }
+            $calle = StringController::sanitizarParaHTML($domicilio->getCalle());
+            $numero = StringController::sanitizarParaHTML($domicilio->getNumero());
+            $piso = StringController::sanitizarParaHTML($domicilio->getPiso());
+            $codigo_postal = $domicilio->getCodigoPostal();
+            $observaciones = StringController::sanitizarParaHTML($persona->getObservaciones());
+            $email = StringController::sanitizarParaHTML($persona->getEmail());
+            $telefono = StringController::sanitizarParaHTML($persona->getTelefono());
+
+            //despues los clavo en un String
+            $clase = ClienteView::traerClase($numeroFila);
+            $html = "
+                <tr class='$clase'>
+                    <td >$cliente</td>
+                    <td class='hidden'>$id_cliente</td>
+                    <td>$subempresa</td>
+                    <td>$provincia</td>
+                    <td>$localidad</td>
+                    <td>$calle</td>
+                    <td>$numero</td>
+                    <td>$piso</td>
+                    <td>$codigo_postal</td>
+                    <td>$telefono</td>
+                    <td>$email</td>
+                    <td>$observaciones</td>
+                    <td>   
+                        <a href='javascript:void(0);' onClick='AbrirPopUp(\"edicion.php?action=m&categoria=cliente&id=".$id_cliente."\", 600, 600); return false;' ><img src='images/tabla/editar.png' /></a>
+                        <a href='javascript:void(0);' onClick='AbrirPopUp(\"edicion.php?action=b&categoria=cliente&id=".$id_cliente."\", 200, 300); return false;' ><img src='images/tabla/borrar.png' /></a>
+                    </td>
+                </tr>
+            ";
+            return $html;
+        }
+        
+        
+        public static function getModifClienteHTML($id){
+            $cliente = new Cliente($id);
+            if (!$cliente) {
+                echo "Error: no se encontr&oacute; el cliente con id $id";
+                return false;
+            }
+            if ($cliente->getPersona()->getDomicilio()->getLocalidad()->getId() ){
+               $idProvincia = $cliente->getPersona()->getDomicilio()->getLocalidad()->getProvincia()->getId();
+               $idLocalidad = $cliente->getPersona()->getDomicilio()->getLocalidad()->getId();                
+            } else {
+                $idProvincia = null;
+                $idLocalidad = null;                
+            }
+			if ($cliente->getSubempresa() == 'SM'){
+				$checked = "checked='true'";
+			}else{
+				$checked = '';
+			}
+			
+            
+            $html = "<table>
+                    <tr>
+                        <td>Nombre:</td>
+                        <td>
+                            <input type='text' name='nombre' id='nombre' value='".$cliente->getPersona()->getNombre()."'/>
+                        </td>
+                    </tr>
+					<tr>
+                        <td>Subempresa:</td>
+                        <td>
+                             <input type='checkbox' name='SM' value='SM' ".$checked.">  SM
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Provincia:</td>
+                        <td>".ProvinciaView::getComboProvinciaHTML($idProvincia)."</td>
+                    </tr>
+                    <tr>
+                        <td>Localidad/Barrio:</td>
+                        <td>".LocalidadView::getComboLocalidadHTML($idLocalidad)."</td>
+                    </tr>
+                    <tr>
+                        <td>Calle:</td>
+                        <td><input type='text' name='calle' id='calle' value='".$cliente->getPersona()->getDomicilio()->getCalle()."'/></td>
+                    </tr>
+                    <tr>
+                        <td>N&uacute;mero:</td>
+                        <td><input type='text' name='numero' id='numero' value='".$cliente->getPersona()->getDomicilio()->getNumero()."'/></td>
+                    </tr>
+                    <tr>
+                        <td>Piso:</td>
+                        <td><input type='text' name='piso' id='piso' value='".$cliente->getPersona()->getDomicilio()->getPiso()."'/></td>
+                    </tr>
+                    <tr>
+                        <td>C&oacute;digo Postal:</td>
+                        <td><input type='text' name='codigo_postal' id='codigo_postal' value='".$cliente->getPersona()->getDomicilio()->getCodigoPostal()."'/></td>
+                    </tr>
+                    <tr>
+                        <td>Tel&eacute;fono:</td>
+                        <td><input type='text' name='telefono' id='telefono' value='".$cliente->getPersona()->getTelefono()."'/></td>
+                    </tr>
+                    <tr>
+                        <td>Email:</td>
+                        <td><input type='text' name='email' id='email' value='".$cliente->getPersona()->getEmail()."'/></td>
+                    </tr>
+                    <tr>
+                        <td>
+                                Observaciones<br>(hasta 500 car.) :
+                        </td>
+                        <td>
+                                <textarea id='observaciones' name='observaciones' rows=10 cols=30>".$cliente->getPersona()->getObservaciones()."</textarea>
+                        </td>
+					
+                    </tr>
+                    </table>
+                ";
+            return $html;
+
+        }
+        public static function getAltaClienteEmbebidoHTML(){
+                $html= "<div id='divAgregarCliente'><table class='embebidoOculto'><tr><td>".self::getAltaClienteHTML()."</td></tr>
+                                <tr><td align='center'><input type='submit' class='botonNegro' name ='addCliente' value ='Agregar Cliente' onclick='agregarCliente();'></input></td></tr>
+                                </table></div>";
+                return $html;				
+        }
+        public static function getAltaClienteHTML(){
+            
+            
+            $html = "<table>
+                    <tr>
+                        <td>Nombre:</td>
+                        <td>
+                            <input type='text' name='nombre' id='nombre' value=''/>
+                        </td>
+                    </tr>
+					<tr>
+                        <td>Subempresa:</td>
+                        <td>
+                             <input type='checkbox' name='SM' value='SM'>  SM
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Provincia:</td>
+                        <td>".ProvinciaView::getComboProvinciaHTML()."</td>
+                    </tr>
+                    <tr>
+                        <td>Localidad/Barrio:</td>
+                        <td><div id='respuestaComboLoc'>".LocalidadView::getComboLocalidadHTML()."</div></td>
+                    </tr>
+                    <tr>
+                        <td>Calle:</td>
+                        <td><input type='text' name='calle' id='calle' value=''/></td>
+                    </tr>
+                    <tr>
+                        <td>N&uacute;mero:</td>
+                        <td><input type='text' name='numero' id='numero' value=''/></td>
+                    </tr>
+                    <tr>
+                        <td>Piso:</td>
+                        <td><input type='text' name='piso' id='piso' value=''/></td>
+                    </tr>
+                    <tr>
+                        <td>C&oacute;digo Postal:</td>
+                        <td><input type='text' name='codigo_postal' id='codigo_postal' value=''/></td>
+                    </tr>
+                    <tr>
+                        <td>Tel&eacute;fono:</td>
+                        <td><input type='text' name='telefono' id='telefono' value=''/></td>
+                    </tr>
+                    <tr>
+                        <td>Email:</td>
+                        <td><input type='text' name='email' id='email' value=''/></td>
+                    </tr>
+                     <tr>
+                        <td>
+                                Observaciones<br>(hasta 500 car.) :
+                        </td>
+                        <td>
+                                <textarea id='observaciones' name='observaciones' rows=10 cols=30></textarea>
+                        </td>
+					
+                    </tr>
+                    </table>
+                ";
+            return $html;
+
+        }
+        
+        public static function getBajaClienteHTML($id){
+            $html = ClienteView::getModifClienteHTML($id);
+            
+            $html.= "<script type='text/javascript'>desactivar('nombre'); desactivar('email'); desactivar('observaciones'); desactivar('telefono'); desactivar('codigo_postal'); desactivar('piso'); desactivar('numero'); desactivar('calle');</script>";
+            return $html;
+        }
+/*
+        public static function getBuscadorHTML() {
+            $html = '<form id="buscador" method="GET" >
+                        <table>
+                            <tr>
+                                <td>Buscar</td>
+                            </tr>
+                            <tr>
+                                <td>Cliente: </td>
+                            </tr>
+                            <tr>
+                                    <td><input id="txtCliente" type="text" name="txtCliente"/></td>
+                            </tr>
+                            <tr>
+                                <td>Provincia: </td>
+                            </tr>
+                            <tr>
+                                    <td>'.ProvinciaView::getComboProvinciaHTML().'</td>
+                            </tr>		
+                            <tr>
+                                    <td align="center"> <input type="checkbox" name="subempresa" value="SM">SM </td>
+                            </tr>
+                            <tr>
+                                <td align = "center"><br /><input type="submit"  class="botonNegro" value="Buscar"/></td>
+                            </tr>
+                        </table>
+                    </form>';
+            return $html;
+        }
+ *
+ * 
+ */
+               
+    }
